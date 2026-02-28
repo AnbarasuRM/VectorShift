@@ -1,64 +1,104 @@
-VectorShift
-Frontend Technical Assessment Instructions
-Thank you for taking the time to interview with us at VectorShift! As part of the
-interview process, we would like you to complete a frontend technical assessment.
-You can find all files necessary for the assignment in the /frontend/src and
-/backend folders. Feel free to make any changes to the provided files, including
-adding new files, deleting existing files, installing new packages, and modifying any
-provided code. Please use JavaScript/React for the frontend and Python/FastAPI for
-the backend.
-The assessment consists of four parts, which are detailed below. You are encouraged
-to read all parts of the assessment before starting so that you can plan your approach.
-You can run the frontend code by navigating to the /frontend directory and running
-(1) npm i and (2) npm start. You can run the backend code by navigating to the
-/backend directory and running uvicorn main:app --reload.
-Feel free to reach out to recruiting@vectorshift.ai if you have any questions.
-Part 1: Node Abstraction
-In /frontend/src, you will find a folder called nodes. This folder contains JavaScript
-files for four types of nodes (inputs, outputs, LLMs, and text). Each of these nodes
-contains different text, content, and input/output connections (called “Handles”),
-but there is also a significant amount of shared code between nodes.
-Currently, you could create a new node by copying an existing node into a new file
-and making modifications, but this approach ends up rewriting significant amounts of
-code. While this approach is tractable for a small number of nodes, it becomes
-difficult to maintain as the number of nodes increases.
-Your task is to create an abstraction for these nodes that speeds up your ability to
-create new nodes and apply styles across nodes in the future.
-Once you have created your abstraction, make five new nodes of your choosing to
-demonstrate how it works. Don’t spend too long worrying about what the nodes
-actually do; you should use this as an opportunity to showcase the
-flexibility/efficiency of your node abstraction.
-Part 2: Styling
-The frontend files you receive do not apply any significant styling. Your task is to style
-the various components into an appealing, unified design. You can use the
-VectorShift’s existing styles as inspiration if you’d like, but you are also free to create
-your own design from the ground-up. You can use whatever React packages/libraries
-that you would like.
-Part 3: Text Node Logic
-The Text node included in the /frontend/src/nodes has a field for text input. We
-want to improve the functionality of this text input in two ways.
-First, we want the width and height of the Text node to change as the user enters
-more text into the text input, improving visibility for what the user types in.
-Second, we want to allow users to define variables in their text input. When a user
-enters a valid JavaScript variable name surrounded by double curly brackets (e.g., “{{
-input }}”), we want to create a new Handle on the left side of the Text node that
-corresponds to the variable. For examples of what this should look like, you can try
-using a VectorShift Text node or watching Tutorials using the VectorShift Text node.
-Part 4: Backend Integration
-In the /backend folder, you will find a very simple Python/FastAPI backend. Your task
-is to build an integration between the frontend you completed and this simple
-backend.
-On the frontend, you should update /frontend/src/submit.js to send the nodes
-and edges of the pipeline to the /pipelines/parse endpoint in the backend when
-the button is clicked.
-On the backend, you should update the /pipelines/parse endpoint in
-/backend/main.py to calculate the number of nodes and edges in the pipeline. You
-should also check whether the nodes and edges in the pipeline form a directed acyclic
-graph (DAG). The response from this endpoint should be in the following format:
-{num_nodes: int, num_edges: int, is_dag: bool}.
-Once you have updated the button and the endpoint, you should create an alert that
-triggers when the frontend receives a response from the backend. This alert should
-display the values of num_nodes, num_edges, and is_dag in a user-friendly manner.
-The final result should allow a user to create a pipeline, click submit, and then
-receive an alert with the number of nodes/edges as well as whether the pipeline is a
-DAG.
+# VectorShift — Frontend Technical Assessment Solution
+
+## Project Structure
+
+```
+vectorshift/
+├── backend/
+│   ├── main.py              # FastAPI backend with DAG detection
+│   └── requirements.txt
+└── frontend/
+    ├── package.json
+    ├── public/index.html
+    └── src/
+        ├── index.js          # React entry point
+        ├── index.css         # Global dark-theme design system
+        ├── App.js            # Main app: ReactFlow canvas + toolbar + submit bar
+        ├── store.js          # Zustand state management (nodes, edges)
+        ├── submit.js         # Part 4: POST to /pipelines/parse
+        ├── Toolbar.js        # Drag-and-drop node palette
+        ├── ResultModal.js    # Part 4: Modal showing analysis results
+        └── nodes/
+            ├── BaseNode.js   # Part 1: Core abstraction
+            ├── inputNode.js  # Original: Input node
+            ├── outputNode.js # Original: Output node
+            ├── llmNode.js    # Original: LLM node
+            ├── textNode.js   # Part 3: Text node (dynamic resize + {{variables}})
+            └── extraNodes.js # Part 1: 5 new nodes (API, Transform, Condition, Database, Note)
+```
+
+---
+
+## How to Run
+
+### Backend
+```bash
+cd backend
+pip install -r requirements.txt
+uvicorn main:app --reload
+# Runs on http://localhost:8000
+```
+
+### Frontend
+```bash
+cd frontend
+npm install
+npm start
+# Runs on http://localhost:3000
+```
+
+---
+
+## Part 1: Node Abstraction
+
+**`BaseNode.js`** is the core abstraction. Every node is created by:
+1. Calling `<BaseNode>` with `type`, `icon`, `color`, `inputs[]`, `outputs[]`
+2. Passing children (fields) into the body
+
+### Helper primitives (exported from BaseNode.js)
+| Export | Purpose |
+|---|---|
+| `BaseNode` | Wrapper that renders header + handles + body |
+| `NodeField` | Labeled field row |
+| `NodeInput` | Styled `<input>` |
+| `NodeSelect` | Styled `<select>` |
+| `useField` | Local state hook scoped to a data key |
+
+### 5 New Nodes (extraNodes.js)
+| Node | Color | Inputs | Outputs |
+|---|---|---|---|
+| **API Request** | Cyan | body, headers | response, status |
+| **Transform** | Purple | input | output |
+| **Condition** | Orange | value | true, false |
+| **Database** | Slate | params | rows, count |
+| **Note** | Brown | — | — |
+
+---
+
+## Part 2: Styling
+
+Dark-theme design system using CSS custom properties (`--bg`, `--surface`, `--accent`, etc.).
+- Each node has a unique accent color driving its header and handle color
+- Selected nodes glow with a color-matched ring
+- Smooth hover/focus transitions throughout
+- Custom MiniMap and Controls styling
+
+---
+
+## Part 3: Text Node Logic
+
+**Dynamic sizing:** The textarea's `scrollHeight` is measured on every keystroke and applied directly, so the node grows vertically. Width is calculated from the longest line (`longestLine * 7.5 + 48px`, clamped 220–600px).
+
+**Variable handles:** `{{varName}}` pattern (valid JS identifier inside `{{ }}`) is extracted with a regex on every change. Each unique variable gets its own `<Handle>` on the left side of the node, labeled with the variable name, and a pill badge inside the body.
+
+---
+
+## Part 4: Backend Integration
+
+**Frontend (`submit.js`):** `POST http://localhost:8000/pipelines/parse` with body `{ nodes, edges }`.
+
+**Backend (`main.py`):** Uses Kahn's algorithm (BFS topological sort) to detect cycles:
+- If all nodes are visited → acyclic → `is_dag: true`
+- If any node has remaining in-degree → cycle exists → `is_dag: false`
+
+**Response modal (`ResultModal.js`):** Displays `num_nodes`, `num_edges`, and a color-coded DAG badge (green ✓ / red ✗).

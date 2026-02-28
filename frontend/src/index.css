@@ -1,13 +1,377 @@
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+/* ─── Reset ─── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ─── Design Tokens ─── */
+:root {
+  --bg:         #0b0d12;
+  --surface:    #111318;
+  --surface2:   #181c24;
+  --surface3:   #1f2332;
+  --border:     #252b3b;
+  --border-hi:  #323b52;
+  --text:       #e2e6f0;
+  --text-muted: #6b748f;
+  --text-dim:   #404660;
+  --accent:     #4f80ff;
+  --accent-glow:rgba(79,128,255,0.18);
+  --radius:     10px;
+  --shadow-sm:  0 2px 8px rgba(0,0,0,0.35);
+  --shadow:     0 4px 20px rgba(0,0,0,0.5);
+  --shadow-lg:  0 8px 40px rgba(0,0,0,0.6);
+  --font:       'Inter', system-ui, sans-serif;
+  --mono:       'JetBrains Mono', 'Fira Code', monospace;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  height: 100vh;
+  overflow: hidden;
 }
+
+#root { height: 100vh; display: flex; flex-direction: column; }
+
+/* ─── Layout ─── */
+.app-wrapper { display: flex; flex-direction: column; height: 100vh; }
+
+/* ─── Header ─── */
+.vs-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  height: 52px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  z-index: 100;
+}
+.vs-header-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.vs-header-logo {
+  width: 28px; height: 28px;
+  background: linear-gradient(135deg, #4f80ff, #8b5cf6);
+  border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+}
+.vs-header-tag {
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--text-muted);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  padding: 2px 7px;
+  border-radius: 20px;
+}
+
+/* ─── Canvas Area ─── */
+.canvas-area { flex: 1; display: flex; overflow: hidden; }
+.canvas-flow { flex: 1; position: relative; }
+
+/* ─── Sidebar ─── */
+.vs-toolbar {
+  width: 200px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  padding: 14px 10px;
+  gap: 4px;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+.vs-toolbar-title {
+  font-size: 9px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--text-dim);
+  padding: 6px 8px 4px;
+}
+.vs-toolbar-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 10px;
+  border-radius: 7px;
+  cursor: grab;
+  border: 1px solid transparent;
+  transition: background 0.15s, border-color 0.15s;
+  user-select: none;
+}
+.vs-toolbar-item:hover { background: var(--surface2); border-color: var(--border); }
+.vs-toolbar-item:active { cursor: grabbing; }
+.vs-toolbar-icon {
+  width: 28px; height: 28px;
+  border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; flex-shrink: 0;
+}
+.vs-toolbar-label { font-size: 12px; font-weight: 500; color: var(--text); }
+.vs-toolbar-divider { height: 1px; background: var(--border); margin: 6px 0; }
+
+/* ─── ReactFlow overrides ─── */
+.react-flow__background { opacity: 1; }
+.react-flow__edge-path { stroke: var(--border-hi); stroke-width: 2; }
+.react-flow__edge.selected .react-flow__edge-path { stroke: var(--accent); }
+.react-flow__connection-path { stroke: var(--accent); stroke-width: 2; stroke-dasharray: 6 3; }
+
+.react-flow__controls {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.react-flow__controls-button {
+  background: var(--surface);
+  border: none;
+  border-bottom: 1px solid var(--border);
+  fill: var(--text-muted);
+  width: 28px; height: 28px;
+}
+.react-flow__controls-button:hover { background: var(--surface2); fill: var(--text); }
+
+.react-flow__minimap {
+  background: var(--surface) !important;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.react-flow__minimap-mask { fill: var(--bg); opacity: 0.6; }
+
+/* ─── Nodes ─── */
+.vs-node {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  min-width: 220px;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s, border-color 0.2s;
+  position: relative;
+}
+.vs-node:hover { border-color: var(--border-hi); box-shadow: var(--shadow); }
+
+/* Selected state — uses data attribute set by ReactFlow */
+.react-flow__node.selected .vs-node {
+  border-color: var(--node-color, var(--accent));
+  box-shadow: 0 0 0 2px rgba(79,128,255,0.25), var(--shadow);
+}
+
+.vs-node-header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 13px;
+  border-radius: calc(var(--radius) - 1px) calc(var(--radius) - 1px) 0 0;
+}
+.vs-node-icon { font-size: 13px; line-height: 1; }
+.vs-node-type {
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.09em; text-transform: uppercase;
+  color: rgba(255,255,255,0.92);
+  flex: 1;
+}
+.vs-node-body {
+  padding: 11px 13px;
+  display: flex; flex-direction: column;
+  gap: 9px;
+}
+
+/* ─── Fields ─── */
+.vs-field { display: flex; flex-direction: column; gap: 4px; }
+.vs-field-label {
+  font-size: 9.5px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.vs-input, .vs-select, .vs-textarea {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 12px;
+  padding: 6px 9px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  appearance: none;
+  -webkit-appearance: none;
+}
+.vs-input:focus, .vs-select:focus, .vs-textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+/* Custom select arrow */
+.vs-select {
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236b748f' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 9px center;
+  padding-right: 28px;
+}
+.vs-select option { background: var(--surface2); color: var(--text); }
+
+.vs-textarea {
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1.6;
+  resize: none;
+  min-height: 68px;
+  overflow-y: hidden;
+}
+
+/* ─── Handle wrappers (replaces putting children inside <Handle>) ─── */
+.vs-handle-wrap {
+  position: absolute;
+  left: 0;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+  z-index: 10;
+}
+.vs-handle-wrap-right {
+  left: auto;
+  right: 0;
+  justify-content: flex-end;
+}
+/* The actual ReactFlow handle inside the wrapper still needs pointer events */
+.vs-handle-wrap .react-flow__handle {
+  pointer-events: all;
+}
+
+/* ─── ReactFlow Handles ─── */
+.react-flow__handle {
+  width: 10px !important;
+  height: 10px !important;
+  border-radius: 50% !important;
+  border: 2px solid var(--surface) !important;
+  transition: transform 0.15s, box-shadow 0.15s;
+  z-index: 10;
+}
+.react-flow__handle:hover {
+  transform: scale(1.5) !important;
+}
+.react-flow__handle-left { left: -6px !important; }
+.react-flow__handle-right { right: -6px !important; }
+
+/* ─── Handle labels ─── */
+.handle-label {
+  position: absolute;
+  font-size: 9px; font-weight: 500;
+  color: var(--text-muted);
+  white-space: nowrap;
+  pointer-events: none;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.handle-label-left  { left: 14px; }
+.handle-label-right { right: 14px; }
+
+/* ─── Variable pill (Text node) ─── */
+.vs-var-pill {
+  display: inline-flex; align-items: center;
+  padding: 2px 7px;
+  background: rgba(59,130,246,0.12);
+  border: 1px solid rgba(59,130,246,0.3);
+  border-radius: 20px;
+  font-size: 9px; font-weight: 600;
+  color: #93c5fd;
+  font-family: var(--mono);
+}
+
+/* ─── Submit Bar ─── */
+.vs-submit-bar {
+  display: flex; align-items: center; justify-content: center;
+  padding: 12px 20px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  gap: 12px;
+  flex-shrink: 0;
+}
+.vs-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 20px;
+  border-radius: 8px;
+  font-family: var(--font);
+  font-size: 13px; font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s;
+  letter-spacing: 0.01em;
+}
+.vs-btn-primary {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 2px 12px rgba(79,128,255,0.35);
+}
+.vs-btn-primary:hover {
+  background: #3d6fee;
+  box-shadow: 0 4px 20px rgba(79,128,255,0.5);
+  transform: translateY(-1px);
+}
+.vs-btn-primary:active { transform: translateY(0); }
+.vs-btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+.vs-btn-secondary {
+  background: var(--surface2);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+.vs-btn-secondary:hover { background: var(--surface3); color: var(--text); border-color: var(--border-hi); }
+
+/* ─── Result Modal ─── */
+.vs-modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.65);
+  backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.15s ease;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.vs-modal {
+  background: var(--surface);
+  border: 1px solid var(--border-hi);
+  border-radius: 14px;
+  padding: 28px 32px;
+  width: 400px;
+  max-width: 90vw;
+  box-shadow: var(--shadow-lg);
+  animation: slideUp 0.2s ease;
+}
+@keyframes slideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+.vs-modal-title {
+  font-size: 16px; font-weight: 700;
+  margin-bottom: 18px;
+  display: flex; align-items: center; gap: 9px;
+}
+.vs-modal-stat {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 11px 14px;
+  background: var(--surface2);
+  border-radius: 8px;
+  margin-bottom: 8px;
+  border: 1px solid var(--border);
+}
+.vs-modal-stat-label { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+.vs-modal-stat-value { font-size: 14px; font-weight: 700; font-family: var(--mono); }
+
+.vs-dag-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px; border-radius: 20px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.05em;
+}
+.vs-dag-true  { background: rgba(52,211,153,0.15); color: #34d399; border: 1px solid rgba(52,211,153,0.3); }
+.vs-dag-false { background: rgba(248,113,113,0.15); color: #f87171; border: 1px solid rgba(248,113,113,0.3); }
+
+.vs-modal-footer { margin-top: 20px; display: flex; justify-content: flex-end; }
+
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 10px; }
