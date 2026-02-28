@@ -1,34 +1,28 @@
-// llmNode.js
+import React from 'react';
+import { BaseNode, NodeField, NodeSelect, useField } from './BaseNode';
 
-import { Handle, Position } from 'reactflow';
-
-export const LLMNode = ({ id, data }) => {
-
+export function LLMNode({ id, data }) {
+  const [model, setModel] = useField(data, 'model', 'gpt-4o');
   return (
-    <div style={{width: 200, height: 80, border: '1px solid black'}}>
-      <Handle
-        type="target"
-        position={Position.Left}
-        id={`${id}-system`}
-        style={{top: `${100/3}%`}}
-      />
-      <Handle
-        type="target"
-        position={Position.Left}
-        id={`${id}-prompt`}
-        style={{top: `${200/3}%`}}
-      />
-      <div>
-        <span>LLM</span>
-      </div>
-      <div>
-        <span>This is a LLM.</span>
-      </div>
-      <Handle
-        type="source"
-        position={Position.Right}
-        id={`${id}-response`}
-      />
-    </div>
+    <BaseNode id={id} type="LLM" icon="🧠" color="#8b5cf6"
+      inputs={[
+        { id: 'system', label: 'system' },
+        { id: 'prompt', label: 'prompt' },
+      ]}
+      outputs={[{ id: 'response', label: 'response' }]}
+    >
+      <NodeField label="Model">
+        <NodeSelect value={model} onChange={setModel}
+          options={[
+            { value: 'gpt-4o',            label: 'GPT-4o' },
+            { value: 'gpt-4o-mini',       label: 'GPT-4o Mini' },
+            { value: 'claude-opus-4',     label: 'Claude Opus 4' },
+            { value: 'claude-sonnet-4-6', label: 'Claude Sonnet 4.6' },
+            { value: 'gemini-2-flash',    label: 'Gemini 2.0 Flash' },
+            { value: 'llama-3-3-70b',     label: 'LLaMA 3.3 70B' },
+          ]}
+        />
+      </NodeField>
+    </BaseNode>
   );
 }

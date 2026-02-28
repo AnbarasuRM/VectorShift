@@ -1,47 +1,20 @@
-// outputNode.js
+import React from 'react';
+import { BaseNode, NodeField, NodeInput, NodeSelect, useField } from './BaseNode';
 
-import { useState } from 'react';
-import { Handle, Position } from 'reactflow';
-
-export const OutputNode = ({ id, data }) => {
-  const [currName, setCurrName] = useState(data?.outputName || id.replace('customOutput-', 'output_'));
-  const [outputType, setOutputType] = useState(data.outputType || 'Text');
-
-  const handleNameChange = (e) => {
-    setCurrName(e.target.value);
-  };
-
-  const handleTypeChange = (e) => {
-    setOutputType(e.target.value);
-  };
-
+export function OutputNode({ id, data }) {
+  const [name, setName]             = useField(data, 'outputName', 'output_0');
+  const [outputType, setOutputType] = useField(data, 'outputType', 'Text');
   return (
-    <div style={{width: 200, height: 80, border: '1px solid black'}}>
-      <Handle
-        type="target"
-        position={Position.Left}
-        id={`${id}-value`}
-      />
-      <div>
-        <span>Output</span>
-      </div>
-      <div>
-        <label>
-          Name:
-          <input 
-            type="text" 
-            value={currName} 
-            onChange={handleNameChange} 
-          />
-        </label>
-        <label>
-          Type:
-          <select value={outputType} onChange={handleTypeChange}>
-            <option value="Text">Text</option>
-            <option value="File">Image</option>
-          </select>
-        </label>
-      </div>
-    </div>
+    <BaseNode id={id} type="Output" icon="📤" color="#f59e0b"
+      inputs={[{ id: 'value', label: 'value' }]}
+    >
+      <NodeField label="Name">
+        <NodeInput value={name} onChange={setName} placeholder="output_name" />
+      </NodeField>
+      <NodeField label="Type">
+        <NodeSelect value={outputType} onChange={setOutputType}
+          options={['Text', 'File', 'Image', 'Number', 'Boolean']} />
+      </NodeField>
+    </BaseNode>
   );
 }
